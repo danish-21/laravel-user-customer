@@ -14,7 +14,6 @@ class CustomerController extends Controller
         return view('customer_register');
     }
 
-
     public function store(Request $request)
     {
         // Validate customer data
@@ -32,21 +31,21 @@ class CustomerController extends Controller
 
         $customer->save();
 
-        $lastAssignedUserId = session('last_assigned_user_id');
+        $users = User::all();
 
-        if (!$lastAssignedUserId) {
-            $lastAssignedUser = User::orderBy('id', 'desc')->first();
-        } else {
-            $nextUserId = ($lastAssignedUserId % User::count()) + 1;
-            $lastAssignedUser = User::find($nextUserId);
+        $assignedUser = $users->first(function ($user) {
+            return $user->customers->isEmpty();
+        });
+
+        if (!$assignedUser) {
+            $assignedUser = $users->first();
         }
 
-        $lastAssignedUser->customers()->attach($customer);
-
-        session(['last_assigned_user_id' => $lastAssignedUser->id]);
+        $assignedUser->customers()->attach($customer);
 
         return redirect('customers/create')->with('success', 'Customer assigned successfully');
     }
+
 
 
 
